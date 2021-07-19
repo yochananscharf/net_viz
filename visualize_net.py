@@ -1,4 +1,5 @@
 from tensorflow.keras.applications.mobilenet import preprocess_input, MobileNet
+from tensorflow.keras.applications.vgg16 import preprocess_input, VGG16
 from tensorflow.keras.preprocessing import image
 from PIL import Image
 from tensorflow.keras import Model
@@ -14,20 +15,22 @@ config = tf.compat.v1.ConfigProto()
 config.gpu_options.per_process_gpu_memory_fraction = 0.3
 tf.compat.v1.keras.backend.set_session(tf.compat.v1.Session(config=config))
 
-st.title('Feature-Map visualizer')
-
 
 
 class Viualize_Net:
     def __init__(self, model=None) -> None:
-        if model==None:
+        if model==None or model=='MobileNet':
              self.model = MobileNet(
                 input_shape=(224,224,3), alpha=0.25, depth_multiplier=1, dropout=0.001,
                 include_top=False, weights='imagenet', input_tensor=None, pooling=None,
                 classes=1000, classifier_activation='softmax'
             )
+        elif model== 'VGG16':
+            self.model = VGG16(input_shape=(224,224,3),
+                include_top=False, weights='imagenet', input_tensor=None, pooling=None,
+                classes=1000, classifier_activation='softmax')
         else:
-            self.model = model
+            print('no model')#self.model = model
         self.test_image = None
         self.image_input = None
         self.activation = None
@@ -78,12 +81,19 @@ class Viualize_Net:
 
 
 if __name__ == '__main__':
+    st.title('Feature-Map visualizer')
+    option = st.sidebar.selectbox(
+    
+    'Wich Model would you like to visualize?',
+    ('VGG16', 'MobileNet'))
+    
+    st.write('You selected: ', option)
     img_file = None
     while True:
 
         img_file = st.file_uploader("Upload an image", type=["png", "jpg", "jpeg"])
         if img_file is not None:
-            break
+            break    
         sleep(4)
     # st.write(type(img_file))
     image_arr = Image.open(img_file)
@@ -94,7 +104,7 @@ if __name__ == '__main__':
     image_input = preprocess_input(image_input)
 
    
-    viualize_net = Viualize_Net()
+    viualize_net = Viualize_Net(option)
     viualize_net.test_image = image_input
     viualize_net.plot_layer_prediction(10)
     
